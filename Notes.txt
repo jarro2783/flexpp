@@ -1,0 +1,221 @@
+========================================================
+Date: 21 Jul 93 14:30:10-0400
+From: John Holmes Sr <ramanand@thor.ece.uc.EDU>
+Subject: Re: flex++/bison++
+To: coetmeur@icdc.fr
+
+I tried all possible alternatives but I think there is still a problem
+with the main.c file in your distribution of flex++. The algorithm for 
+generating the variable "headerfilename" actually extracts the base name of 
+the file supplied in the command line (and NOT the name of the scanner as 
+defined by the %name in flex++) and then uses this extracted string to
+derive the #ifdef name for the flex header anti-include mechanism.
+However, what happens there is that any number that appears in a filename
+is converted to the symbol '_'.  Everything will be fine if the file names
+do not end with a number. But if they do, then multiple file names with
+the same prefix and different only in the trailing numbers get mapped onto
+the same #ifdef guard.   To fix this bug (if it is a bug) I went ahead and
+modified the  main.c file to take care of digits appearing in the file
+name.  Now it works fine.
+
+
+
+From coetmeur Thu Jul 22 09:21:23 1993
+To: ramanand@thor.ece.uc.EDU
+Subject: Re: flex++/bison++
+
+
+
+	THANKS, and good job ! I am patching the sources in this
+direction.  
+ 
+========================================================
+
+From coetmeur Mon Jul 19 13:07:23 1993
+To: holzmann@fmi.uni-passau.de
+Subject: Re: flex++
+Content-Length: 2153
+X-Lines: 53
+Status: RO
+
+	Good job ! you find one ! With such help, things are going
+	better and better.
+
+	Effectively, I have forgotten the #define YY_USE_CLASS in the
+    flexskel.cc in the #ifdef __cplusplus ... It was not evident,
+    because the #include of the header contain such a #define , and it
+    is included short time after. But the effect if to keep the old
+    behaviour of YYINPUT and so on... so no virtual were used.  I don't
+    understand why I didn't found it before... but you find it, and so
+    I send you  may best thanks. 
+
+	To patch it, just add this '#define YY_USE_CLASS' between the
+    #ifdef __cplusplus and the #endif, around line 39. I have patched
+    it in my master copy (release 2.3.7-4), in a similar way (I just
+    added an anti-redefine #ifndef ). I hope it doesn't add bugs !!
+
+	I tested this on my own tools, and it does work. I noted a
+    change in the behaviour of the scanner. Since we now really use
+    buffered IO and not read, the scanner does buffers much data and so
+    output is not synchronized to input on keyboard/screen IO. this
+    shows that it works ! (hope so)
+
+
+
+	Thanks for help... Hope my work will be useful...
+
+	Alain Coetmeur
+
+PS: You should rename the install directory of flex++ and
+bison++ to something like bison++-1.19-2 and flex++-2.3.8-3 to avoid
+mismatch with official flex and bison. I confirm that my job is not
+official, and not at all the successor of flex and bison. It is just
+a cleanly patched version, kept as much compatible as possible, in
+my mind.
+
+========================================================
+
+From coetmeur Mon Jul 12 18:51:02 1993
+To: tlhouns@srv.PacBell.COM
+Subject: Re: bison++/flex++ / test bigtest
+Content-Length: 1919
+X-Lines: 47
+Status: RO
+
+
+
+> The distribution of flex++
+> does not properly resolve a "make test" or "make bigtest" command.  I
+> get lots of errors.  Is this anything I need to worry about?
+
+
+	Good remark. there was 3 problems  .
+
+		1- I have not regenerated the 'initscan.c' (or scan.c)
+		 it is not important since it works, but is not coherent.
+		If you want to be clean :
+
+		touch scan.l ; make flex++ initscan 
+
+		2- The new system insert #line directive that use the skeletons name,
+		and since the test skeleton is local (./flexskel.cc .h) and
+		the other global (/u/.../flexskel.cc .h) there is always differences.
+
+		3- the new code use trailing context in the internal scanner (scan.l)
+		and so we can no more use fast table compression mode to generate
+		scan.c itself. so don't worry errors are logical.
+
+here is the new targets for test ...
+but you should not bother with test and bigtest , it is obsolete !!
+
+
+test : flex++
+	echo "diff should only be on #line directive"
+	-./flex++ $(FLEX_FLAGS) -S./flexskel.cc -H./flexskel.h $(COMPRESSION) scan.l | diff scan.c -
+bigtest :
+	echo "diff should only be on #line directive"
+	-rm -f scan.c ; $(MAKE) COMPRESSION="-C" test
+	echo "diff should only be on #line directive"
+	-rm -f scan.c ; $(MAKE) COMPRESSION="-Ce" test
+	echo "diff should only be on #line directive"
+	-rm -f scan.c ; $(MAKE) COMPRESSION="-Cm" test
+	echo this should fail because there is trailing context in the grammar
+	-rm -f scan.c ; $(MAKE) COMPRESSION="-Cfe" test
+	echo this should fail because there is trailing context in the grammar
+	-rm -f scan.c ; $(MAKE) COMPRESSION="-CFe" test
+	echo this should fail because there is trailing context in the grammar
+	-rm -f scan.c ; $(MAKE) COMPRESSION="-Cf" test
+	echo this should fail because there is trailing context in the grammar
+	-rm -f scan.c ; $(MAKE) COMPRESSION="-CF" test
+	echo "diff should only be on #line directive"
+	-rm -f scan.c ; $(MAKE)
+
+=====================================================
+> Date: 29 Aug 93 15:13:11+0200
+> From: Andreas Holzmann <holzmann@kirk.fmi.uni-passau.NONE.de>
+> Subject: flex++: header in section2?
+> To: coetmeur@icdc.fr
+> 
+> I have some problems with your flex++ version V3.0.2, based on 2.3.8.
+> In line 301 of flexskel.h there is an 'announcement' for the section2
+> %header{ but it was impossible to me to get some lines at this point of
+> the header file.
+	Ok, it is a bug
+> 
+> I tried the following program:
+> (translated with: flex++ -otest.cc -htest.h test.l)
+> -------- start test.l ------
+> %name test
+> %header{
+> #define HEADER_TEST_1 1
+> %}
+> 
+> %%
+> 
+> %header{
+> #define HEADER_TEST_2 1
+> %}
+> 
+> %%
+> -------- end test.l ------
+> 
+> the output of test.h after line 55:
+> 
+> -------- start test.h ------
+> /* % here is the declaration from section1 %header{  */
+> #line 6 "test.l"
+> #define HEADER_TEST_1 1
+> #line 10 "test.l"
+> #line 12 "test.l"
+> #define HEADER_TEST_2 1
+> #line 16 "test.l"
+> #endif
+> #line 52 "./flexskel.h"
+> ------ end test.h ------
+> 
+> well, I expected the HEADER_TEST_2 line to be at the end of the test.h file.
+
+	Right, exactly as you say ! there is a bug in scan.l.
+	I must load the second skeleton  section (which is empty, this is why
+        I didn't notice it)
+
+	i have corrected it. I just added the header_skeleton_out(); in the
+       lex rule to pass from section 1 to 2
+
+
+
+^"%%".*			{
+			set_lexer_name((char *)0);
+			sectnum = 2;
+			line_directive_out( headerfile );
+      			if(headerfilename!=NULL)
+		        {
+      			 fprintf(stdout,
+                          "#include \"%s\"\n",includefilename);
+ >>>			 header_skeleton_out();
+    		 	};
+			line_directive_out( stdout );
+			BEGIN(SECT2PROLOG);
+			return ( SECTEND );
+			}
+> 
+> Something strange happend, when I delete '%name test' from test.l
+> Then the HEADER_TEST_1 line moves to the top of test.h
+
+	when you don't give the %name, the flex++ know thereof the 
+   name of the parser, so it decide immediately to include the parser declaration.
+   but before this, it cannot, since the name of the parser is needed to 
+   generate the symbols. when you don't give any %name, the
+   %% simulate a %name parser, just before the %%, up to be coherent, and
+   so it load the class declaration before section 2.
+
+
+> whereas the
+> HEADER_TEST_2 line furthermore is at the (wrong?) place.
+ 	now it will be a the good place
+> 
+> so my question is, how do I get some lines after this line:
+> /* % here is the declaration from section2 %header{ */
+	now it will work
+
+thanks for all

@@ -1,0 +1,426 @@
+.TH FLEX++ 1 "3/3/93" "GNU and RDT" "COMMANDS" 
+.SH "NAME" 
+flex++ \- generate a scanner in c or c++\.\.
+.SH "SYNOPSIS" 
+\fBscanner++\fP [\fB\-bcFfdIiLpsTtv?\fP] [\fB\-C\fP[\fBe\fP][\fBm\fP|\fBf\fP|\fBF\fP]] [\fB\-a\fP\fItmp\-directory\fP] [\fB\-o\fP\fIoutfile\fP] [\fB\-g\fP\fIinclude\-pathname\fP] [\fB\-h\fP[\fIheaderfile\fP]] [\fB\-S\fP\fIskeleton\fP] [\fB\-H\fP\fIheader\-skeleton\fP] \fIgrammar\-file\fP\.\.\.
+.SH "DESCRIPTION" 
+Generate a scanner\. Based on \fBflex\fP version 2\.3\.7\. See \fBflex\fP(1) and \fBflexdoc\fP(1) for details of main functionality\. Only changes are reported here\.
+.PP
+You now generate a C++ class if you are compiling with a C++ compiler\. A generated header can be generated, and is made from a skeleton\-header\. The code skeleton is also more adaptable\. It permit you to modify much things only by changing the two skeletons\.
+.PP
+In plain C, the \fBflex++\fP is compatible with standard \fBflex\fP\.
+.PP
+If no header is generated, it is in fact merged, instead of included\.
+.SH "OPTIONS" 
+.\"bloc1[
+.IP "\\fB\\-a\\fP \\fItmp\\-directory\\fP"
+Set directory of temp files \.
+.IP "\\fB\\-S\\fP\\fIskeleton\\fP"
+Set filename of code skeleton\. Default is \fBflexskel\.cc\fP\.
+.IP "\\fB\\-H\\fP\\fIheader\\-skeleton\\fP"
+Set filename of header skeleton\. Default is \fBflexskel\.h\fP\.
+.IP "\\fB\\-h\\fP[\\fIheader\\fP]"
+Set filename of header skeleton\. Default is \fBlex\.yy\.h\fP, or \fIc_basename\fP\.h if \fB\-o\fPis used and there is no header name, \fB\.c\fP, \fB\.cc\fP, \fB\.C\fP, \fB\.cpp\fP, \fB\.cxx\fP\.\.\. options for output files are replaced by \fB\.h\fP to generate the header name\.
+.IP "\\fB\\-g\\fP\\fIincludefilename\\fP"
+change the filename that \fBflex++\fP put in the \fB#include\fP inside the code, when a separate header is generated\. Useful when the parameter name of the header contain pathname information that may change\.
+.\"bloc1]
+.SH "DECLARATIONS" 
+These are new declarations to put in the declaration section :
+.\"bloc1[
+.IP "\\fB%name\\fP \\fIscanner_name\\fP"
+Declare the name of this scanner\. User for C++ class name, and to render many names unique\. default is \fBlex\fP\. Must be given before \fB%define\fP, or never\.
+.IP "\\fB%define\\fP \\fIdefine_name\\fP \\fIcontent\\.\\.\\.\\fP"
+Declare a macro symbol in header and code\. The name of the symbol is \fBYY_\fP'\fIscanner_name\fP'\fB_\fP'\fIdefine_name\fP'\. The content if given after, as with #define\. Newline can be escaped as with #define\. Many symbols are proposed for customisation\.
+.IP "\\fB%header{\\fP"
+Like \fB%{\fP, but include this text in the header\. End with \fB%}\fP\. When put in declaration section, the text is added before the definitions\. It can be put at the begin of the second section so that the text is added after all definition in the header\.
+.\"bloc1]
+.SH "DECLARATION DEFINE SYMBOLS" 
+These are the symbols you can define with \fB%define\fP in declaration section, or that are already defined\. Remind that they are replaced by a preprocessor \fB#define YY_\fP'\fIscanner_name\fP'\fB_\fP'\fIname\fP\.
+.\"bloc1[
+.IP "\\fBFLEX_SCANNER\\fP"
+Automaticaly defined in the code\. used for conditioanl code\. it is effectively defined at the point of the \fB%name\fP directive, or at the point of the \fB%%\fP between section 1 and 2\.
+.IP "\\fBCHAR\\fP"
+Automaticaly defined in the code\. Define the type of char used depending of the 8\-bits flag (\fBunsigned char\fP if 8\-bit, \fBchar\fP if 7\-bit)\. it is effectively defined at the point of the \fB%name\fP directive, or at the point of the \fB%%\fP between section 1 and 2\. You cannot use it before\.
+.IP "\\fBFLEX_DEBUG\\fP"
+Automaticaly defined in the code if debug option \fB\-d\fP set\. Define the type of char used depending of the 8\-bits flag (\fBunsigned char\fP if 8\-bit, \fBchar\fP if 7\-bit)\. it is effectively defined at the point of the \fB%name\fP directive, or at the point of the \fB%%\fP between section 1 and 2\. You cannot use it before\.
+.IP "\\fBDEBUG_FLAG\\fP"
+The runtime debug flag name\. Default is \fByy_flex_debug\fP\. See \fByy_flex_debug\fP in flex\. Used only in debug mode\.
+.IP "\\fBDEBUG_INIT\\fP"
+The runtime debug flag initial value\. Default is \fB1\fP\. See \fByy_flex_debug\fP in flex\.
+.IP "\\fBTEXT\\fP"
+The scanned text string\. default \fByytext\fP\. See \fByytext\fP in \fBflex\fP\.
+.IP "\\fBLENG\\fP"
+The scanned text length\. default \fByyleng\fP\. See \fByyleng\fP in \fBflex\fP\.
+.IP "\\fBIN\\fP"
+The input file pointer\. default \fByyin\fP\. See \fByyin\fP in \fBflex\fP\.
+.IP "\\fBOUT\\fP"
+The input file pointer\. default \fByyout\fP\. See \fByyout\fP in \fBflex\fP\.
+.IP "\\fBLEX\\fP"
+The scanner function name\. default \fByylex\fP\. See \fByylex\fP in \fBflex\fP\. Replace \fB#define YYDECL\fP\.
+.IP "\\fBLEX_RETURN\\fP"
+The scanner function return type\. default \fBint\fP\. See \fByylex\fP in \fBflex\fP\. Replace \fB#define YYDECL\fP\.
+.IP "\\fBLEX_PARAM\\fP"
+The scanner function parameter list\. default \fBvoid\fP, or empty un old\-C\. See \fByylex\fP in \fBflex\fP\. Replace \fB#define YYDECL\fP\.
+.IP "\\fBLEX_PARAM_DEF\\fP"
+The scanner function parameter declaration for old\-C\. Defined and used only in old\-C\. Default empty \. See \fByylex\fP in \fBflex\fP\. Replace \fB#define YYDECL\fP\. For example to pass an \fBint\fP, named \fBx\fP, \fBLEX_PARAM\fP
+.\"bloc1]
+.PP
+is set to \fBx\fP, and \fBLEX_PARAM_DEF\fP to \fBint x ;\fP\.
+.\"bloc1[
+.IP "\\fBRESTART\\fP"
+The restart function name\. default \fByyrestart\fP\. See \fByyrestart\fP in \fBflex\fP\.
+.IP "\\fBSWITCH_TO_BUFFER\\fP"
+.IP "\\fBLOAD_BUFFER_STATE\\fP"
+.IP "\\fBCREATE_BUFFER\\fP"
+.IP "\\fBDELETE_BUFFER\\fP"
+.IP "\\fBINIT_BUFFER\\fP"
+The buffer control functions names\. defaults are \fByy_switch_to_buffer\fP, \fByy_load_buffer_state\fP, \fByy_create_buffer\fP, \fByy_delete_buffer\fP, \fByy_init_buffer\fP\. See this functions in \fBflex\fP\.
+.IP "\\fBCURRENT_BUFFER\\fP"
+The name of the pointeur to the current buffer\. Without class, it is yy_current_buffer, and the old macro YY_CURRENT_BUFFER is defined to it's value\. With class, the default value is YY_CURRENT_BUFFER, and there is no macro YY_CURRENT_BUFFER\.
+.\"bloc1]
+.PP
+These are only used if class is generated\.
+.\"bloc1[
+.IP "\\fBCLASS\\fP"
+The class name\. default is the scanner name\.
+.IP "\\fBINHERIT\\fP"
+The inheritance list\. Don't forget the \fB:\fP before, if not empty list\.
+.IP "\\fBMEMBERS\\fP"
+List of members to add to the class definition, before ending it\.
+.IP "\\fBECHO\\fP"
+The scanner echo member function boby\. Default to yy_echo\. this function is called by the macro ECHO\. See \fBECHO\fP on \fBflex\fP\.
+.IP "\\fBINPUT\\fP"
+The block input member function \. This function is called inside the macro YY_INPUT\. It read a block of text to be scanned\. Default is to read \fByyin\fP\. See \fBYY_INPUT\fP\.
+.IP "\\fBFATAL_ERROR\\fP"
+The error message member function \. This function is called inside the macro YY_FATAL_ERROR\. Default is to write the message to stderr and exit \. See \fBYY_FATAL_ERROR\fP\.
+.IP "\\fBWRAP\\fP"
+The wrap member function \. This function is called inside the macro \fByywrap()\fP\. Default is to return 1 \. See \fByywrap()\fP in \fBflex\fP\.
+.IP "\\fBECHO_PURE\\fP"
+.IP "\\fBINPUT_PURE\\fP"
+.IP "\\fBFATAL_ERROR_PURE\\fP"
+.IP "\\fBWRAP_PURE\\fP"
+Indicate that the corresponding member function is to be pure\. It implys automatically the \fIfunction\fP\fB_NOCODE\fP symbol
+.IP "\\fBECHO_NOCODE\\fP"
+.IP "\\fBINPUT_NOCODE\\fP"
+.IP "\\fBFATAL_ERROR_NOCODE\\fP"
+.IP "\\fBWRAP_NOCODE\\fP"
+Indicate that the corresponding member function is not to be defined in the generated code, but outside by yourself\. Activated automaticaly by the \fIfunction\fP\fB_PURE\fP symbols\.
+.IP "\\fBECHO_CODE\\fP"
+.IP "\\fBINPUT_CODE\\fP"
+.IP "\\fBFATAL_ERROR_CODE\\fP"
+.IP "\\fBWRAP_CODE\\fP"
+Give the body code of the corresponding member function\. default is to implement standard behaviour\. Ignored if \fIfunction\fP\fB_PURE\fP or \fIfunction\fP\fB_NOCODE\fP are defined\.
+.IP "\\fBCONSTRUCTOR_PARAM\\fP"
+List of parameters of the constructor\. Dont allows default value\.
+.IP "\\fBCONSTRUCTOR_INIT\\fP"
+List of initialisation befor constructor call\. If not empty dont't forget the \fB:\fP before list of initialisation\.
+.IP "\\fBCONSTRUCTOR_CODE\\fP"
+Code added after internal initialisations in constructor\.
+.IP "\\fBDESTRUCTOR_CODE\\fP"
+Code added before internal cleanup in destructor\.
+.IP "\\fBIOSTREAM\\fP"
+If defined, this flag make flex use the \fBiostream\fP library\. The behaviour is much the same, but instead of \fBFILE *\fP, yyin and yyout are \fBistream *\fP and \fBostream *\fP\. they point to \fBcin\fP and \fBcout\fP by default\. Debug message and fatal error are printed on \fBcerr\fP\. \fBBUFFER\fP refers to \fBistream *\fP instead of \fBFILE *\fP\. These values are default, but like with \fBstdio\fP you can change them with the same \fB%define\fP\. \fBiostream\.h\fP is also included\.
+.IP "\\fBIFILE\\fP"
+Type of the structure that represent IN file (\fByyin\fP)\. Normally \fBFILE\fP, or \fBistream\fP if \fBIOSTREAM\fP is defined\. \fBBUFFER\fP function use also pointer to this type\.
+.IP "\\fBIFILE_DEFAULT\\fP"
+Initial value of \fBIN\fP (yyin)\. Normally \fBstdin\fP, or \fB&cin\fP if \fBIOSTREAM\fP is defined\.
+.IP "\\fBOFILE\\fP"
+Type of the structure that represent OUT file (\fByyout\fP)\. Normally \fBFILE\fP, or \fBostream\fP if \fBIOSTREAM\fP is defined\.
+.IP "\\fBOFILE_DEFAULT\\fP"
+Initial value of \fBOUT\fP (yyout)\. Normally \fBstdout\fP, or \fB&cout\fP if \fBIOSTREAM\fP is defined\.
+.IP "\\fBERRFILE\\fP"
+File handle used to output debug message, and also fatal errors\. Default is \fBstderr\fP or \fBcerr\fP if \fBIOSTREAM\fP is defined\.
+.\"bloc1]
+.SH "OBSOLETED FUNCTIONS" 
+.\"bloc1[
+.IP "\\fByyinput()\\fP"
+In C++, the member function \fByyinput()\fP is equivalent to \fBinput()\fP that read one char\. It is kept for compatibility with old flex behaviour, that replaced in C++ ,the function \fBinput()\fP with \fByyinput()\fP not to colide with stream library\. Don't mismatch it with \fByy_input(char *buf, int &result, int max_size)\fP which read a bloc to be buffered\.
+.\"bloc1]
+.SH "OBSOLETED PREPROCESSOR SYMBOLS" 
+if you use new features, the folowing symbols should not be used, though they are proposed\. Incoherence may arise if they are defined simultaneously with the new symbol\.
+.\"bloc1[
+.IP "\\fBYYDECL\\fP"
+In C only\. Prefer \fB%define LEX\fP, \fB%define LEX_RETURN\fP, \fB%define LEX_PARAM\fP, \fB%define LEX_PARAM_DEF\fP\. Totaly ignored with classes, or if you \fB%define\fP one of these symbols, or the symbol \fBLEX_DEFINED\fP, since it mean you use the new ways to redefine yylex declaration\. Never use it if header are generated, since the declared function would be wrong\.
+.IP "\\fByy_new_buffer\\fP"
+In C only\. Prefer \fB%define CREATE_BUFFER\fP\.
+.IP "\\fBYY_CHAR\\fP"
+like with old \fBflex\fP\. You should better use the \fB%define\fP'ed symbol \fBCHAR\fP, or not use this yourself, since you know if you are 8 or 7\-bit\. Not defined in separate header\.
+.IP "\\fBFLEX_DEBUG\\fP"
+Like with old \fBflex\fP\. activate trace\. prefer the automaticaly added \fB%define DEBUG \fP\. Defined if debug option \fB\-d\fP set\.
+.IP "\\fBFLEX_SCANNER\\fP"
+like with old \fBflex\fP\. defined in the scanner itself \.
+.IP "\\fBYY_END_TOK\\fP"
+Like with old \fBflex\fP\. Indicate the value returned at end by yylex\. Don't redefine it, since it is only informative\. Value is 0\.
+.\"bloc1]
+.SH "CONSERVED PREPROCESSOR SYMBOLS" 
+These symbols are kept, and cannot be defined elsewhere, since they control private parameters of the generated parser, or are actually unused\. You can \fB#define\fP them to the value you need, or indirectly to the name of a \fB%define\fP generated symbol if you want to be clean\.
+.\"bloc1[
+.IP "\\fBYY_READ_BUF_SIZE\\fP"
+Size of read buffer (8192)\. You must undefine it to redefine it after, like like with old \fBflex\fP\.
+.IP "\\fBYY_BUF_SIZE\\fP"
+Total size of read buffer ( YY_READ_BUF_SIZE *2 )\. You must undefine it to redefine it after, except if defined by \fBcpp\fP , like with old \fBflex\fP\.
+.IP "\\fByyterminate()\\fP"
+like with old \fBflex\fP\. default return YY_NULL, that is 0\.
+.IP "\\fBYY_BREAK\\fP"
+Like with old \fBflex\fP\. Don't use it, it is supported but dangerous\.
+.IP "\\fBYY_NEW_FILE\\fP"
+Action to continue scanning with the repopened file in yyin\. like with old flex\. Normally nor to be changed\.
+.\"bloc1]
+.PP
+These are used only without classes, and you should redefine corresponding virtual function with classes, instead of the macros themselves\.
+.\"bloc1[
+.IP "\\fBECHO\\fP"
+like with old \fBflex\fP\. With classes it is mapped to the virtual function yy_echo(), and you should not modify the macro itself\. This name can be changed with \fB%define ECHO\fP\.
+.IP "\\fBYY_INPUT\\fP"
+like with old \fBflex\fP\. With classes it use the virtual function yy_input(), and you should not modify the macro itself\. This name can be changed with \fB%define INPUT\fP\.
+.IP "\\fBYY_FATAL_ERROR\\fP"
+like with old \fBflex\fP\. With classes it is mapped to the virtual function yy_fatal_error(), and you should not modify the macro itself\. This name can be changed with \fB%define FATAL_ERROR\fP\.
+.IP "\\fByywrap\\fP"
+like with old \fBflex\fP\. With classes it is mapped to the virtual function yy_wrap(), and you should not modify the macro itself\. This name can be changed with \fB%define WRAP\fP\.
+.\"bloc1]
+.SH "OTHER ADDED PREPROCESSOR SYMBOLS" 
+.\"bloc1[
+.IP "\\fBYY_USE_CLASS\\fP"
+indicate that class will be produced\. Default if C++\.
+.\"bloc1]
+.SH "C++ CLASS GENERATED" 
+To simplify the notation, we note \fB%SYMBOLNAME\fP the preprocessor symbol generated with a \fB%define\fP of this name\. In fact see the use of \fB%define\fP for it's real name\.
+.PP
+Note that there is sometime symbols that differ from only an underscore \fB_\fP, like \fByywrap\fP and \fByy_wrap\fP\. They are much different\. In this case \fByy_wrap()\fP is a virtual member function, and \fByywrap()\fP is a macro\.
+.SS "General Class declaration" 
+// Here is the declaration made in the header
+.PP
+class %CLASS %INHERIT
+.PP
+{
+.PP
+private:/* data */
+.PP
+// Secret, don't use\.
+.PP
+private: /* functions */
+.PP
+void yy_initialize();
+.PP
+int input();
+.PP
+int yyinput() {return input();};
+.PP
+void yyunput( %CHAR c, %CHAR *buf_ptr );
+.PP
+// Others are secret, don't use\.
+.PP
+protected:/* non virtual */
+.PP
+YY_BUFFER_STATE %CURRENT_BUFFER;
+.PP
+void %RESTART ( FILE *input_file );
+.PP
+void %SWITCH_TO_BUFFER( YY_BUFFER_STATE new_buffer );
+.PP
+void %LOAD_BUFFER_STATE( void );
+.PP
+YY_BUFFER_STATE %CREATE_BUFFER( FILE *file, int size );
+.PP
+void %DELETE_BUFFER( YY_BUFFER_STATE b );
+.PP
+void %INIT_BUFFER( YY_BUFFER_STATE b, FILE *file );
+.PP
+protected: /* virtual */
+.PP
+// these 4 virtual function may be declared PURE (=0), with the symbols like %ECHO_PURE,\.\.\.
+.PP
+// these 4 virtual function may not be defined in the generated code, with the symbol like %ECHO_NOCODE,\.\.\.
+.PP
+// these 4 virtual function may be defined with another code, with the symbol like ECHO_CODE,\.\.\.
+.PP
+virtual void %ECHO();
+.PP
+virtual int %INPUT(char *buf,int &result,int max_size);
+.PP
+virtual void %FATAL_ERROR(char *msg);
+.PP
+virtual int %WRAP();
+.PP
+public:
+.PP
+%CHAR *%TEXT;
+.PP
+int %LENG;
+.PP
+FILE *%IN, *%OUT;
+.PP
+%LEX_RETURN %LEX ( %LEX_PARAM);
+.PP
+%CLASS(%CONSTRUCTOR_PARAM) ;
+.PP
+~%CLASS() ;
+.PP
+#if %DEBUG != 0
+.PP
+int %DEBUG_FLAG;
+.PP
+#endif
+.PP
+public: /* added members */
+.PP
+%MEMBERS
+.PP
+};
+.PP
+// this is the code for the virtual function
+.PP
+// may be disabled with symbol like ECHO_PURE or ECHO_NOCODE
+.PP
+void %CLASS::%ECHO() // echo the current token
+.PP
+{%ECHO_CODE}
+.PP
+int %CLASS::%INPUT(char * buffer,int &result,int max_size) // read a bloc of text
+.PP
+{%INPUT_CODE}
+.PP
+void %CLASS::%FATAL_ERROR(char *msg) // print a fatal error
+.PP
+{%FATAL_ERROR_CODE}
+.PP
+int %CLASS::%WRAP() // decide if we must stop input, or continue
+.PP
+{%WRAP_CODE}
+.SS "Default Class declaration" 
+// Here is the default declaration made in the header when you %define nothing
+.PP
+class lexer
+.PP
+{
+.PP
+private:/* data */
+.PP
+// Secret, don't use\.
+.PP
+private: /* functions */
+.PP
+void yy_initialize();
+.PP
+int input();
+.PP
+int yyinput() {return input();};
+.PP
+void yyunput( unsigned char c, unsigned char *buf_ptr );
+.PP
+// Others are secret, don't use\.
+.PP
+protected:/* non virtual */
+.PP
+YY_BUFFER_STATE YY_CURRENT_BUFFER;
+.PP
+void yyrestart ( FILE *input_file );
+.PP
+void yy_switch_to_buffer( YY_BUFFER_STATE new_buffer );
+.PP
+void yy_load_buffer_state( void );
+.PP
+YY_BUFFER_STATE yy_create_buffer( FILE *file, int size );
+.PP
+void yy_delete_buffer( YY_BUFFER_STATE b );
+.PP
+void yy_init_buffer( YY_BUFFER_STATE b, FILE *file );
+.PP
+protected: /* virtual */
+.PP
+virtual void yy_echo();
+.PP
+virtual int yy_input(char *buf,int &result,int max_size);
+.PP
+virtual void yy_fatal_error(char *msg);
+.PP
+virtual int yy_wrap();
+.PP
+public:
+.PP
+unsigned char *yytext;
+.PP
+int yyleng;
+.PP
+FILE *yyin, *yyout;
+.PP
+int yylex ( void);
+.PP
+lexer() ;
+.PP
+~lexer() ;
+.PP
+#if YY_lexer_DEBUG != 0
+.PP
+int yy_flex_debug;
+.PP
+#endif
+.PP
+public: /* added members */
+.PP
+};
+.PP
+// this is the code for the virtual function
+.PP
+void lexer::yy_echo() // echo the current token
+.PP
+{fwrite( (char *) yytext, yyleng, 1, yyout );}
+.PP
+int lexer::yy_input(char * buffer,int &result,int max_size) // read a bloc of text
+.PP
+{return result= fread( buffer, 1,max_size, yyin );}
+.PP
+void lexer::yy_fatal_error(char *msg) // print a fatal error
+.PP
+{fputs( msg, stderr );putc( 'n', stderr );exit( 1 );}
+.PP
+int lexer::yy_wrap() // decide if we must stop input, or continue
+.PP
+{return 1;}
+.SH "USAGE" 
+Should replace \fBflex\fP, because it generate a far more customisable parser, with header, still beeing compatible\.
+.PP
+You should always use the header facility\.
+.PP
+Use it with \fBbison++\fP (same author)\.
+.SH "EXEMPLES" 
+flex++ use itself to generate it's scanner\. It is full compatible with classic flex\.
+.PP
+This man page has been produced through a parser made in C++ with this version of \fBflex++\fP and our version of \fBbison++\fP (same author)\.
+.SH "FILES" 
+.\"bloc1[
+.IP "\\fBflexskel\\.cc\\fP"
+main skeleton\.
+.IP "\\fBflexskel\\.h\\fP"
+header skeleton\.
+.\"bloc1]
+.SH "ENVIRONNEMENT" 
+.SH "DIAGNOSTICS" 
+.SH "SEE ALSO" 
+\fBflex\fP(1),\fBflexdoc\fP(1),\fBbison++\fP(1)\.
+.SH "DOCUMENTATION" 
+.SH "BUGS" 
+Tell us more !
+.PP
+Because \fBflex++\fP put a \fB#include\fP of the generated header in the generated code, the header is necessary, and must be reachable by \fBcpp\fP\. use the \fB\-g\fP option to change the pathname of this file\. Problems arise when the header is generated in another directory, or is moved\.
+.PP
+Parameters are richer than before, and nothing is removed\. POSIX compliance can be enforced by not using extensions\. If you want to forbide them, there is a good job for you\.
+.PP
+The grammar file scanner now support any EndOfLine sequence (CR, LF, CRLF), event inside the same file\. So dont worry if it accept files from MSDOS, MacIntosh, and UNIX, with neither any message nor any problem\. This is not a bug\.
+.PP
+The automatic \fB%define\fP symbols \fBFLEX_DEBUG\fP, \fBFLEX_SCANNER\fP and \fBCHAR\fP, are added only after the \fB%name\fP directive, or at the \fB%%\fP between section 1 and 2\. You cannot use them before, neither in \fB%header{\fP, nor \fB%{\fP\. A good practice is to always give a name, and to give it at first\. The old \fB#define\fP symbols are still defined at top for backward compatibility\.
+.SH "FUTUR WORKS" 
+tell us !
+.PP
+POSIX compliance\. is'nt it good now ?
+.PP
+compatibility with \fBflex 2\.4\fP ? possible ?
+.SH "INSTALLATION" 
+With this install the executable is named flex++\. rename it flex if you want, because it could replace \fBflex\fP\. Another good name, could ne \fBflex_pp\fP like Dos version use\.
+.SH "TESTS" 
+.SH "AUTHORS" 
+Alain Coe\*:tmeur (coetmeur@icdc\.fr), R&D department (RDT) , Informatique\-CDC, France\.
+.SH "RESTRICTIONS" 
+The words 'we', and 'us' mean the author and colleages, not GNU\. We don't have contacted GNU about this, nowaday\. If you're in GNU, we are ready to propose it to you, and you may tell us what you think about\.
+.PP
+Based on GNU version 2\.3\.8 of flex\. Modified by the author\.

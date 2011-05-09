@@ -1,0 +1,42 @@
+*ajout de la regle %header{ , start condition HEADER_BLOC, 
+*ajout de la regle %header{ , start condition HEADER_BLOC, section 2
+* gestion commentaire c++ // section1
+* comm c++ // dans action
+* char *headerfilename;
+* FILE *headerfile;
+* char *skelheaderfilename;
+* FILE *skelheaderfile;
+*changen flex.skel flexskel.cc
+*changer flx.skel ey header dans makefile
+*option -Hheaderskeleton
+*option -hgeneratedheader
+*le header n'est produit que avec -h
+*HEADER_ECHO
+*DEFAULT_SKELETONHEADER_FILE
+*linedirective header
+*%define name value == #define YY_'lexer_name'_'name'
+*%name
+*char lexer_name[]
+*nepas ouvrir skeleton header si pas de header
+*mettre le code header dans le code si pas d'option -h
+*si option -h vide, pas de header produit, mais suppose plus tard
+*mettre les ifdef anti reentree debut et fin
+*decouper le header en sections debut/classe/fin
+*name_defined extern
++redefinir inherit
++redefinir members
++redefinir le prototype des static const data/extern const data
++definir un symbole flex_cplusplus
++definir une fonction d'init du constructeur
++definir un constructeur standard
++definir une classe interne de buffer/fichiers?
++enlever les #line des skeletons
++mettre en protected toutes les donnees utilisables
++permettre de redefinir le prototype de yylex
++permettre de redefinir le nom de yylex
++permettre de redefinir les paramettres effectifs de yylex
++mettre en privee les donees internes
++definir le symbole FLEX_SCANNER_@
++remplacer les macros yyinput,yymore,... par des %define
++definir les macros yyniput d'apres les %define au debut, dans le code C
++definir les macros de %define avec leur valeur par defaut si vide
