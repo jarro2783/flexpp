@@ -40,7 +40,7 @@ static char rcsid[] =
 
 #include "flexdef.h"
 
-static char flex_version[] = "2.3.8-7 (flex++), based on 2.3.8 and modified by coetmeur@icdc.fr for c++";
+static char flex_version[] = "2.3.8-45 (flex++), based on 2.3.8 and modified by coetmeur@icdc.fr for c++";
 
 /* declare functions that have forward references */
 

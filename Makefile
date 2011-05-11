@@ -1,6 +1,6 @@
 # make file for "flex" tool
 
-# @(#) $Header: /usr/fsys/odin/a/vern/flex/RCS/Makefile,v 2.9 90/05/26 17:28:44 vern Exp $ (LBL)
+# @(#) $Header: /home/tguthrie/projects/parser/flex++/RCS/Makefile,v 1.3 2011/05/11 09:35:24 tguthrie Exp tguthrie $ (LBL)
 
 # Porting considerations:
 #
@@ -37,16 +37,11 @@
 # AUXDIR, manual pages will be installed in MANDIR with extension MANEXT.
 # Raw, unformatted troff source will be installed if INSTALLMAN=man, nroff
 # preformatted versions will be installed if INSTALLMAN=cat.
-#DESTDIR =
-#BINDIR = /usr/local
-#LIBDIR = /usr/local/lib
-#AUXDIR = /usr/local/lib
-#MANDIR = /usr/man/manl
-DESTDIR = $(ENV_DIR)/
-BINDIR = tools/bin
-LIBDIR = tools/lib
-AUXDIR = tools/lib
-MANDIR = doc/man/man1
+DESTDIR = /opt/gnu/
+BINDIR = bin
+LIBDIR = lib
+AUXDIR = lib
+MANDIR = man/man1
 MANEXT = 1
 INSTALLMAN = man
 .SUFFIXES : .dman
@@ -60,7 +55,7 @@ INSTALLMAN = man
 SKELETON_FILE = $(DESTDIR)$(AUXDIR)/flexskel.cc
 HEADERSKELETON_FILE = $(DESTDIR)$(AUXDIR)/flexskel.h
 SKELFLAGS = -DDEFAULT_SKELETON_FILE=\"$(SKELETON_FILE)\" -DDEFAULT_SKELETONHEADER_FILE=\"$(HEADERSKELETON_FILE)\"
-CFLAGS = -O -g
+CFLAGS = -O -DDEFAULT_CSIZE=256
 LDFLAGS = -s
 
 COMPRESSION =
@@ -68,7 +63,7 @@ FLEX_FLAGS = -ist8
 # which "flex" to use to generate scan.c from scan.l
 FLEX = flex++
 YACC= bison++ -y
-# CC = cc
+CC = gcc
 
 AR = ar
 RANLIB = ranlib
@@ -141,12 +136,8 @@ sym.o : sym.c flexdef.h
 tblcmp.o : tblcmp.c flexdef.h
 yylex.o : yylex.c flexdef.h
 
-flex.man : flex.1
-	nroff -man flex.1 >flex.man
 flex++.man : flex++.1
 	nroff -man flex++.1 >flex++.man
-flexdoc.man : flexdoc.1
-	nroff -man flexdoc.1 >flexdoc.man
 
 $(FLEXLIB) : $(FLEX_LIB_OBJS)
 	$(AR) cru $(FLEXLIB) $(FLEX_LIB_OBJS)
@@ -173,18 +164,12 @@ install-lib: $(DESTDIR)$(LIBDIR) $(FLEXLIB)
 $(DESTDIR)$(LIBDIR):
 	mkdir $@
 
-install.man: flex.1 flexdoc.1 flex++.1
-	install -c -m 644 flex++.1 $(DESTDIR)$(MANDIR)/flex++.$(MANEXT)
-	#install -c -m 644 flex.1 $(DESTDIR)$(MANDIR)/flex.$(MANEXT)
-	#install -c -m 644 flexdoc.1 $(DESTDIR)$(MANDIR)/flexdoc.$(MANEXT)
+install.man: flex++.1
+	install -c -m 644 flex++.1 $(DESTDIR)$(MANDIR)
 
-install.cat: flex.1 flexdoc.1 flex++.1
+install.cat: flex++.1
 	nroff -h -man flex++.1 > $(DESTDIR)$(MANDIR)/flex.$(MANEXT)
-	#nroff -h -man flex.1 > $(DESTDIR)$(MANDIR)/flex.$(MANEXT)
-	#nroff -h -man flexdoc.1 > $(DESTDIR)$(MANDIR)/flexdoc.$(MANEXT)
 	chmod 644 $(DESTDIR)$(MANDIR)/flex++.$(MANEXT)
-	#chmod 644 $(DESTDIR)$(MANDIR)/flex.$(MANEXT)
-	#chmod 644 $(DESTDIR)$(MANDIR)/flexdoc.$(MANEXT)
 
 clean :
 	rm -f core errs flex++ *.o parse.c *.lint parse.h flex.man flex++.man tags lex.backtrack \
@@ -193,7 +178,7 @@ clean :
 tags :
 	ctags $(FLEX_C_SOURCES)
 
-vms :	flex.man flex++.man flexdoc.man
+vms :	flex++.man
 	$(MAKE) $(MFLAGS) distrib
 test : flex++
 	echo "diff should only be on #line directive"
