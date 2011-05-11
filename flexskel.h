@@ -43,7 +43,11 @@
 #define YY_PROTO(proto) ()
 #endif
 #endif
+#ifdef __cplusplus
+#include <cstdio>
+#else
 #include <stdio.h>
+#endif
 
 
 
@@ -52,17 +56,17 @@
 
 #ifdef YY_USE_CLASS
 #ifdef YY_@_IOSTREAM
-#include <iostream.h>
-#define YY_@_IFILE  istream
-#define YY_@_OFILE ostream 
-#define YY_@_ERRFILE cerr
+#include <iostream>
+#define YY_@_IFILE  std::istream
+#define YY_@_OFILE std::ostream 
+#define YY_@_ERRFILE std::cerr
 
 #ifndef YY_@_IFILE_DEFAULT
-#define YY_@_IFILE_DEFAULT &cin
+#define YY_@_IFILE_DEFAULT &std::cin
 #endif
 
 #ifndef YY_@_OFILE_DEFAULT
-#define YY_@_OFILE_DEFAULT &cout
+#define YY_@_OFILE_DEFAULT &std::cout
 #endif
 
 #endif
@@ -254,7 +258,7 @@ YY_@_LEX_PARAM_DEF
 #ifndef YY_@_IOSTREAM
 #define YY_@_INPUT_CODE return result= fread(  buffer, 1,max_size,YY_@_IN );
 #else
-#define YY_@_INPUT_CODE if(YY_@_IN->eof())  result=0;else {YY_@_IN->read(buffer,max_size);result=YY_@_IN->gcount();YY_@_IN->clear(YY_@_IN->rdstate()&(~ios::failbit));if(YY_@_IN->bad()) result= -1;} return result;
+#define YY_@_INPUT_CODE if(YY_@_IN->eof())  result=0;else {YY_@_IN->read(buffer,max_size);result=YY_@_IN->gcount();YY_@_IN->clear(YY_@_IN->rdstate()&(~std::ios::failbit));if(YY_@_IN->bad()) result= -1;} return result;
 #endif
 #endif
 
@@ -341,7 +345,7 @@ class YY_@_CLASS YY_@_INHERIT
   =0
 #endif
   ;
- virtual void  YY_@_FATAL_ERROR(char *msg)
+ virtual void  YY_@_FATAL_ERROR(const char *msg)
 #ifdef YY_@_FATAL_ERROR_PURE
   =0
 #endif

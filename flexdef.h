@@ -26,7 +26,7 @@
  * MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSE.
  */
 
-/* @(#) $Header: /usr/fsys/odin/a/vern/flex/RCS/flexdef.h,v 2.10 90/08/03 14:09:52 vern Exp $ (LBL) */
+/* @(#) $Header: /home/tguthrie/projects/parser/flex++/RCS/flexdef.h,v 1.2 2011/05/11 08:04:13 tguthrie Exp tguthrie $ (LBL) */
 
 
 #ifndef FILE
@@ -87,6 +87,10 @@ extern int unlink PROTO((char*));
 extern int write PROTO((int, char*, int));
 #endif
 
+#ifdef __GNUC__
+#include <stdlib.h>
+#include <string.h>
+#else
 #ifdef SYS_V
 #include <string.h>
 #else
@@ -101,6 +105,7 @@ void *memset();
 #else
 #if defined(ATARI) || defined(TURBO)
 char *memset();
+#endif
 #endif
 #endif
 #endif
