@@ -33,14 +33,15 @@ char copyright[] =
 #endif /* not lint */
 
 #ifndef lint
-static char rcsid[] =
-    "@(#) $Header: /usr/fsys/odin/a/vern/flex/RCS/main.c,v 2.9 90/06/27 23:48:24 vern Exp $ (LBL)";
+static const char* SID = "$Id$";
 #endif
 
 
 #include "flexdef.h"
+#include "version.h"
 
-static char flex_version[] = "2.3.8-45 (flex++), based on 2.3.8 and modified by coetmeur@icdc.fr for c++";
+static char flex_version[] = FLEX_VERSION;
+
 
 /* declare functions that have forward references */
 
@@ -810,8 +811,8 @@ get_next_arg: /* used by -C and -S flags in lieu of a "continue 2" control */
  int flexinfo(status)
  int status;
  {
-    fprintf(stderr,"Syntax  :  flex  [options...] inp_file\n");
-    fprintf(stderr,"Function: fast lexical analyzer generator C/C++  V%s\n",flex_version);
+    fprintf(stderr,"Syntax  :  flex++  [options...] inp_file\n");
+    fprintf(stderr,"Function: fast lexical analyzer generator C/C++ version %s\n", flex_version);
     fprintf(stderr,"Options : \n");
     fprintf(stderr,"	-a dir_path  : directory path for temporary files\n");
     fprintf(stderr,"	-b  : generate backtracking information to lex.backtrack\n");
@@ -831,7 +832,6 @@ get_next_arg: /* used by -C and -S flags in lieu of a "continue 2" control */
     fprintf(stderr,"	-I  : generate interactive scanner\n");
     fprintf(stderr,"	-i  : generate case-insensitive scanner\n");
     fprintf(stderr,"	-L  : supress #line directives\n");
- /*   fprintf(stderr,"	-n hexnum : generate scanner using <hexnum> as newline char.\n");*/
     fprintf(stderr,"	-p  : generate performance report to stderr\n");
     fprintf(stderr,"	-S skeleton_path : file path for skeleton file\n");
     fprintf(stderr,"	-H header_skeleton_path : file path for header skeleton file\n");
