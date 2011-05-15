@@ -10,10 +10,11 @@
 # b. For Vax/VMS, add "-DVMS" to DEFS.
 # c. For MS-DOS, add "-DMS_DOS" to DEFS.
 #    See the directory MISC/MSDOS for additional info.
-CFLAGS = -O -DDEFAULT_CSIZE=256
 DEFS = @DEFS@
-LDFLAGS = -s
 LIBS = @LIBS@
+CPPFLAGS = -I. -I$(srcdir) $(DEFS)
+CFLAGS = -O -DDEFAULT_CSIZE=256
+LDFLAGS = -s
 
 # Installation targeting.  Files will be installed under the tree rooted
 # at prefix.  flex++ will be installed in bindir, libfl.a in libdir, and
@@ -48,135 +49,111 @@ INSTALL_PROGRAM = @INSTALL_PROGRAM@
 # You normally do not need to modify anything below this point.
 # ------------------------------------------------------------
 
-CPPFLAGS = -I. -I$(srcdir) $(DEFS)
-
+# Suffix/Implicit Rules:
 .c.o:
 	$(CC) -c $(CPPFLAGS) $(CFLAGS) $<
 
-HEADERS = flexdef.h
+%.c %.h : %.y
+	$(YACC) -d -o $*.c $<
 
-SOURCES = ccl.c dfa.c ecs.c gen.c main.c misc.c nfa.c parse.y \
-	scan.l sym.c tblcmp.c yylex.c
-OBJECTS = ccl.o dfa.o ecs.o gen.o main.o misc.o nfa.o parse.o \
-	scan.o sym.o tblcmp.o yylex.o
+# Top-level target names:
+FLEX = flex++
+# Default distribution archive name:
+DISTRO = $(FLEX)
+# "Bootstrap" flex used only to generate scan.c from scan.l:
+FIRSTFLEX = firstflex
 
+# File groups:
+HEADERS = flexdef.h version.h
+CSRCS = ccl.c dfa.c ecs.c gen.c main.c misc.c nfa.c sym.c tblcmp.c yylex.c
+COBJS = ccl.o dfa.o ecs.o gen.o main.o misc.o nfa.o sym.o tblcmp.o yylex.o
+SOURCES = $(CSRCS) scan.l parse.y
+OBJECTS = $(COBJS) scan.o parse.o
+FFOBJS = $(COBJS) initscan.o parse.o
 LIBSRCS = libmain.c
 LIBOBJS = libmain.o
+LINTSRCS = $(CSRCS)
+FLEXLIB = libfl.a
+DOCFILES = README COPYING INSTALL Changes Notes.txt notesevolution
+MANFILES = flex++.1 flex++.1.dman
+INSTFILES = configure Makefile.in install.sh mkinstalldirs
+DATAFILES = flexskel.cc flexskel.h
+DISTFILES = $(DOCFILES) $(MANFILES) $(INSTFILES) \
+	    $(DATAFILES) $(HEADERS) $(SOURCES) scan.c $(LIBSRCS) MISC
 
-LINTSRCS = ccl.c dfa.c ecs.c gen.c main.c misc.c nfa.c parse.c \
-	scan.c sym.c tblcmp.c yylex.c
-
-DISTFILES = README COPYING INSTALL \
-	Makefile.in \
-	$(HEADERS) $(SOURCES) $(LIBSRCS) MISC \
-	flex++.1 scan.c install.sh mkinstalldirs configure
-
-DIST_NAME = flex++
-
-# Which "flex" to use to generate scan.c from scan.l:
-FLEX = ./flex++
-
-FLEX_FLAGS = -ist $(PERF_REPORT)
+# flex++ options:
 COMPRESSION =
-PERF_REPORT =
-
+FLEXFLAGS = -ist
 SKELETON_FILE = $(libdir)/flexskel.cc
 HEADERSKELETON_FILE = $(libdir)/flexskel.h
-SKELFLAGS = -DDEFAULT_SKELETON_FILE=\"$(SKELETON_FILE)\" -DDEFAULT_SKELETONHEADER_FILE=\"$(HEADERSKELETON_FILE)\"
+SKELFLAGS = -DDEFAULT_SKELETON_FILE=\"$(SKELETON_FILE)\" \
+	    -DDEFAULT_SKELETONHEADER_FILE=\"$(HEADERSKELETON_FILE)\"
 
-FLEXLIB = libfl.a
 
+# Rules:
+all: $(FLEX)
 
-all: flex++
-
-flex++: .bootstrap $(OBJECTS) $(FLEXLIB)
+$(FLEX): $(OBJECTS) $(FLEXLIB)
 	$(CC) $(CFLAGS) -o $@ $(LDFLAGS) $(OBJECTS) $(FLEXLIB) $(LIBS)
 
-.bootstrap: initscan.c
-	@rm -f scan.c
-	cp $(srcdir)/initscan.c scan.c
-	touch .bootstrap
-
-parse.c: parse.y
-	$(YACC) -d $(srcdir)/parse.y
-	@sed '/extern char.*malloc/d' <y.tab.c >parse.c
-	@rm -f y.tab.c
-	@mv y.tab.h parse.h
-
-parse.h: parse.c
+$(FIRSTFLEX): $(FFOBJS) $(FLEXLIB)
+	$(CC) $(CFLAGS) -o $@ $(LDFLAGS) $(FFOBJS) $(FLEXLIB) $(LIBS)
 
 scan.c: scan.l
-	$(FLEX) $(FLEX_FLAGS) $(COMPRESSION) $(srcdir)/scan.l >scan.tmp
-	sed s,\"$(srcdir)/scan.l\",\"scan.l\", <scan.tmp >scan.c
-	@rm scan.tmp
+	$(MAKE) $(FIRSTFLEX)
+	$(FIRSTFLEX) $(FLEXFLAGS) $(COMPRESSION) $< \
+	| sed s=\"$(srcdir)/scan.l\"=\"scan.l\"= > $@
 
-scan.o: scan.c parse.h flexdef.h
-yylex.o: yylex.c parse.h flexdef.h
-
-# WAS: skel.c: flex.skl mkskel.sh
-# WAS: 	$(SHELL) $(srcdir)/mkskel.sh $(srcdir)/flex.skl >skel.c
-
-main.o: main.c flexdef.h version.h
+$(OBJECTS): flexdef.h
+scan.o yylex.o: parse.h
+main.o: main.c version.h
 	$(CC) $(CFLAGS) -c $(SKELFLAGS) main.c
-ccl.o: ccl.c flexdef.h
-dfa.o: dfa.c flexdef.h
-ecs.o: ecs.c flexdef.h
-gen.o: gen.c flexdef.h
-misc.o: misc.c flexdef.h
-nfa.o: nfa.c flexdef.h
-parse.o: parse.c flexdef.h
-# WAS: skel.o: skel.c flexdef.h
-sym.o: sym.c flexdef.h
-tblcmp.o: tblcmp.c flexdef.h
-yylex.o : yylex.c flexdef.h
 
 test: check
-check: flex++
-	@$(FLEX) $(FLEX_FLAGS) -S$(srcdir)/flexskel.cc -H$(srcdir)/flexskel.h \
+check: $(FLEX)
+	@$(FLEX) $(FLEXFLAGS) -S$(srcdir)/flexskel.cc -H$(srcdir)/flexskel.h \
 	$(COMPRESSION) $(srcdir)/scan.l \
 	| sed s=\"$(srcdir)/scan.l\"=\"scan.l\"= \
 	| sed s=\"$(srcdir)/flexskel.=\"$(libdir)/flexskel.= \
-	| diff scan.c -
+	| diff -s scan.c -
 	@echo "Check successful, using COMPRESSION=\"$(COMPRESSION)\""
 
 bigcheck:
-	rm -f scan.c ; $(MAKE) COMPRESSION="-C" check
-	rm -f scan.c ; $(MAKE) COMPRESSION="-Ce" check
-	rm -f scan.c ; $(MAKE) COMPRESSION="-Cm" check
-	rm -f scan.c ; $(MAKE) COMPRESSION="-Cfea" check
-	rm -f scan.c ; $(MAKE) COMPRESSION="-CFer" check
-	rm -f scan.c ; $(MAKE) COMPRESSION="-l" PERF_REPORT="" check
-	rm -f scan.c ; $(MAKE)
-	@echo "All checks successful"
+	-rm -f scan.[co]; $(MAKE) COMPRESSION="-C" check
+	-rm -f scan.[co]; $(MAKE) COMPRESSION="-Ce" check
+	-rm -f scan.[co]; $(MAKE) COMPRESSION="-Cm" check
+	-rm -f scan.[co]; $(MAKE) FLEXFLAGS="$(FLEXFLAGS) -a/tmp" check
+	rm -f scan.[co]; $(MAKE)
 
 $(FLEXLIB): $(LIBOBJS)
 	$(AR) cru $(FLEXLIB) $(LIBOBJS)
 	-$(RANLIB) $(FLEXLIB)
 
-flex++.man: flex++.1
-	cd $(srcdir); nroff -man flex++.1 > flex++.man
+$(FLEX).man: $(FLEX).1
+	cd $(srcdir); nroff -man $< > $@
 
 # NOTE: libfl.a is not installed (to avoid conflict w/flex?)
-install: flex++ $(FLEXLIB) installdirs install.$(INSTALLMAN)
-	$(INSTALL_PROGRAM) flex++ $(bindir)/flex++
+install: $(FLEX) $(FLEXLIB) installdirs install.$(INSTALLMAN)
+	$(INSTALL_PROGRAM) $(FLEX) $(bindir)/$(FLEX)
 	$(INSTALL_DATA) flexskel.h $(HEADERSKELETON_FILE)
 	$(INSTALL_DATA) flexskel.cc $(SKELETON_FILE)
 	# SKIPPED: $(INSTALL_DATA) $(FLEXLIB) $(libdir)/libfl.a
 	# SKIPPED: $(RANLIB) $(libdir)/libfl.a
 
-install.man: flex++.1
-	$(INSTALL_DATA) $(srcdir)/flex++.1 $(mandir)/flex++.$(manext)
+install.man: $(FLEX).1
+	$(INSTALL_DATA) $(srcdir)/$(FLEX).1 $(mandir)/$(FLEX).$(manext)
 
-install.cat: flex++.man
-	$(INSTALL_DATA) $(srcdir)/flex++.man $(mandir)/flex++.$(manext)
+install.cat: $(FLEX).man
+	$(INSTALL_DATA) $(srcdir)/$(FLEX).man $(mandir)/$(FLEX).$(manext)
 
 installdirs:
 	$(SHELL) $(srcdir)/mkinstalldirs $(bindir) $(libdir) $(mandir)
 
 uninstall:
-	rm -f $(bindir)/flex++
+	rm -f $(bindir)/$(FLEX)
+	rm -f $(HEADERSKELETON_FILE) $(SKELETON_FILE)
 	rm -f $(libdir)/libfl.a
-	rm -f $(mandir)/flex++.$(manext)
+	rm -f $(mandir)/$(FLEX).$(manext)
 
 tags: $(SOURCES)
 	ctags $(SOURCES)
@@ -185,36 +162,36 @@ TAGS: $(SOURCES)
 	etags $(SOURCES)
 
 lint: $(LINTSRCS)
-	lint -Dconst= $(LINTSRCS) > flex++.lint
+	lint -Dconst= $(LINTSRCS) > $(FLEX).lint
 
 gcc-lint: $(LINTSRCS)
-	gcc -Dlint -Wall $(LINTSRCS) >flex++.gcc-lint 2>&1
+	gcc -Dlint -Wall $(LINTSRCS) >$(FLEX).gcc-lint 2>&1
 
 mostlyclean:
-	rm -f *~ a.out *.bak core errs scan.tmp
+	rm -f *~ a.out *.bak core errs lex.yy.c lex.yy.cc
 
 clean: mostlyclean
-	rm -f parse.c parse.h *.o *.lint lex.yy.c lex.yy.cc $(FLEXLIB)
+	rm -f $(FIRSTFLEX) parse.c parse.h *.o *.lint $(FLEXLIB)
 
 distclean: clean
-	rm -f .bootstrap flex++ scan.c tags TAGS Makefile config.status
+	rm -f $(FLEX) $(FLEX).man scan.c tags TAGS Makefile config.status
 
 realclean: distclean
-	rm -f flex++.man flex++*.tar.gz flex++*.tar.Z
+	rm -f $(DISTRO)*.tar.gz $(DISTRO)*.tar.Z
 
 dist: flex++ $(DISTFILES)
-	$(MAKE) DIST_NAME=flex++-`sed <version.h 's/[^0-9.]*\([0-9.-]*\).*/\1/'` dist2
+	$(MAKE) DISTRO=$(FLEX)-`sed <version.h 's/[^0-9.]*\([0-9.-]*\).*/\1/'` dist2
 
 dist2:
-	@rm -rf $(DIST_NAME)
-	@rm -f $(DIST_NAME).tar.gz
-	@mkdir $(DIST_NAME)
-	tar cf - $(DISTFILES) | (cd $(DIST_NAME); tar xfB -)
-	@mv $(DIST_NAME)/scan.c $(DIST_NAME)/initscan.c
-	@chmod 444 $(DIST_NAME)/initscan.c
-	@chmod +w $(DIST_NAME)/Makefile.in
-	tar --exclude-vcs --gzip -chf $(DIST_NAME).tar.gz $(DIST_NAME)
-	-rm -rf $(DIST_NAME)
+	@rm -rf $(DISTRO)
+	@rm -f $(DISTRO).tar.gz
+	@mkdir $(DISTRO)
+	tar cf - $(DISTFILES) | (cd $(DISTRO); tar xfB -)
+	@mv $(DISTRO)/scan.c $(DISTRO)/initscan.c
+	@chmod 444 $(DISTRO)/initscan.c
+	@chmod +w $(DISTRO)/Makefile.in
+	tar --exclude-vcs --gzip -chf $(DISTRO).tar.gz $(DISTRO)
+	-rm -rf $(DISTRO)
 
 Makefile: Makefile.in config.status
 	$(SHELL) config.status
