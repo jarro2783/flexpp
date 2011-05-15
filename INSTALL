@@ -1,4 +1,24 @@
+		flex++ Installation 
+============================================================
+QUICK START:
+
+  configure --prefix=<InstallPrefix>
+  make
+  make check
+  make install
+  make check-inst
+
+See Step 1 in the generic install section to learn about install
+prefixes (default /usr/local).  It must be a writable directory,
+or have writable subdirectories bin, lib, and man.
+
+After verifying that MANPATH includes <InstallPrefix>/man:
+  man flex++
+
+
+============================================================
 This is a generic INSTALL file for utilities distributions.
+
 If this package does not come with, e.g., installable documentation or
 data files, please ignore the references to them below.
 

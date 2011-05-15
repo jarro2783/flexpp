@@ -101,8 +101,9 @@ $(FIRSTFLEX): $(FFOBJS) $(FLEXLIB)
 
 scan.c: scan.l
 	$(MAKE) $(FIRSTFLEX)
-	$(FIRSTFLEX) $(FLEXFLAGS) $(COMPRESSION) $< \
-	| sed s=\"$(srcdir)/scan.l\"=\"scan.l\"= > $@
+	$(FIRSTFLEX) $(FLEXFLAGS) -S$(srcdir)/flexskel.cc -H$(srcdir)/flexskel.h \
+	$(COMPRESSION) $< \
+	| sed s=\"$(srcdir)/flexskel.=\"$(libdir)/flexskel.= > $@
 
 $(OBJECTS): flexdef.h
 scan.o yylex.o: parse.h
@@ -110,20 +111,16 @@ main.o: main.c version.h
 	$(CC) $(CFLAGS) -c $(SKELFLAGS) main.c
 
 test: check
-check: $(FLEX)
+check: scan.l $(FLEX)
 	@$(FLEX) $(FLEXFLAGS) -S$(srcdir)/flexskel.cc -H$(srcdir)/flexskel.h \
-	$(COMPRESSION) $(srcdir)/scan.l \
-	| sed s=\"$(srcdir)/scan.l\"=\"scan.l\"= \
+	$(COMPRESSION) $< \
 	| sed s=\"$(srcdir)/flexskel.=\"$(libdir)/flexskel.= \
 	| diff -s scan.c -
 	@echo "Check successful, using COMPRESSION=\"$(COMPRESSION)\""
 
-bigcheck:
-	-rm -f scan.[co]; $(MAKE) COMPRESSION="-C" check
-	-rm -f scan.[co]; $(MAKE) COMPRESSION="-Ce" check
-	-rm -f scan.[co]; $(MAKE) COMPRESSION="-Cm" check
-	-rm -f scan.[co]; $(MAKE) FLEXFLAGS="$(FLEXFLAGS) -a/tmp" check
-	rm -f scan.[co]; $(MAKE)
+check-inst: scan.l $(FLEX)
+	$(bindir)/$(FLEX) $(FLEXFLAGS) $< | diff -s scan.c -
+	@echo "Installation check successful"
 
 $(FLEXLIB): $(LIBOBJS)
 	$(AR) cru $(FLEXLIB) $(LIBOBJS)
