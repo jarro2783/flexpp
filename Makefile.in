@@ -101,7 +101,7 @@ $(FIRSTFLEX): $(FFOBJS) $(FLEXLIB)
 
 scan.c: scan.l
 	$(MAKE) $(FIRSTFLEX)
-	$(FIRSTFLEX) $(FLEXFLAGS) -S$(srcdir)/flexskel.cc -H$(srcdir)/flexskel.h \
+	./$(FIRSTFLEX) $(FLEXFLAGS) -S$(srcdir)/flexskel.cc -H$(srcdir)/flexskel.h \
 	$(COMPRESSION) $< \
 	| sed s=\"$(srcdir)/flexskel.=\"$(libdir)/flexskel.= > $@
 
@@ -112,7 +112,7 @@ main.o: main.c version.h
 
 test: check
 check: scan.l $(FLEX)
-	@$(FLEX) $(FLEXFLAGS) -S$(srcdir)/flexskel.cc -H$(srcdir)/flexskel.h \
+	@./$(FLEX) $(FLEXFLAGS) -S$(srcdir)/flexskel.cc -H$(srcdir)/flexskel.h \
 	$(COMPRESSION) $< \
 	| sed s=\"$(srcdir)/flexskel.=\"$(libdir)/flexskel.= \
 	| diff -s scan.c -
@@ -168,10 +168,10 @@ mostlyclean:
 	rm -f *~ a.out *.bak core errs lex.yy.c lex.yy.cc
 
 clean: mostlyclean
-	rm -f $(FIRSTFLEX) parse.c parse.h *.o *.lint $(FLEXLIB)
+	rm -f $(FIRSTFLEX) scan.c parse.c parse.h *.o *.lint $(FLEXLIB)
 
 distclean: clean
-	rm -f $(FLEX) $(FLEX).man scan.c tags TAGS Makefile config.status
+	rm -f $(FLEX) $(FLEX).man tags TAGS Makefile config.status
 
 realclean: distclean
 	rm -f $(DISTRO)*.tar.gz $(DISTRO)*.tar.Z

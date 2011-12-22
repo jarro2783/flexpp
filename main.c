@@ -33,7 +33,7 @@ char copyright[] =
 #endif /* not lint */
 
 #ifndef lint
-static const char* SID = "$Id$";
+static const char* mainSID = "$Id$";
 #endif
 
 
